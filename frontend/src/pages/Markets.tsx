@@ -61,7 +61,7 @@ export function Market({ assetClass }: { assetClass: AssetClass }) {
           {state.environment === 'simulation' && symbol && (
             <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
               <button className="btn-ghost text-xs" onClick={() => actions.loadScenario(symbol)}>Load scripted rulebook setup on {symbol}</button>
-              Injects a textbook SIMULATED setup (HTF breach → lopsided V → 4-touch build-up) to exercise the full pipeline.
+              Injects a textbook SIMULATED setup (HTF breach → lopsided V → 4-touch build-up) to exercise the full pipeline. With the default cost limit (costs ≤ 25% of price risk) small ₹10,000-account trades are rejected; raise it in Settings to see the full flow.
             </div>
           )}
         </Section>

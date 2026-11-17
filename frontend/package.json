@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:standalone": "node scripts/build-standalone.mjs"
   },
   "dependencies": {
     "@base44/sdk": "0.8.62",

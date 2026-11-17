@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, CircleDashed, Info, Loader2, PlugZap, XCircle } from 'lucide-react';
 import type { DataSource, Environment } from '@core/types.ts';
 import { formatInr } from '@core/money.ts';
@@ -116,3 +116,15 @@ export function ago(ts: number | undefined, now: number) {
 }
 export const istTime = (ts?: number) => (ts ? new Date(ts).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : '—');
 export const px = (x?: number) => (x === undefined || !Number.isFinite(x) ? '—' : x >= 1000 ? x.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : x.toFixed(x < 10 ? 4 : 2));
+
+/** Two-step confirmation inside the page (browser confirm() dialogs are not available everywhere). */
+export function ConfirmButton({ label, confirmLabel, onConfirm, className = 'btn-ghost', disabled, children }: { label: string; confirmLabel: string; onConfirm: () => void; className?: string; disabled?: boolean; children?: ReactNode }) {
+  const [armed, setArmed] = useState(false);
+  if (!armed) return <button className={className} disabled={disabled} onClick={() => setArmed(true)}>{children}{label}</button>;
+  return (
+    <span className="inline-flex items-center gap-1">
+      <button className="btn-danger" disabled={disabled} onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
+      <button className="btn-ghost" onClick={() => setArmed(false)}>Keep</button>
+    </span>
+  );
+}

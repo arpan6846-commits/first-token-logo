@@ -1,5 +1,5 @@
 import { useApp } from '../runtime/AppContext.tsx';
-import { Empty, NotConnected, PageHeader, Section, StatusPill, istTime } from '../components/ui.tsx';
+import { ConfirmButton, Empty, NotConnected, PageHeader, Section, StatusPill, istTime } from '../components/ui.tsx';
 
 const JOBS = [
   ['Market-data health check', 'every 60 s (worker) + watchdog every 5 min (Base44)', 'Feed staleness blocks signals and entries'],
@@ -26,7 +26,7 @@ export function Automation() {
           <button className="btn-ghost" disabled={state.busy} onClick={() => actions.reconcile('KITE')}>Reconcile Kite</button>
           <button className="btn-ghost" disabled={state.busy} onClick={() => actions.reconcile('COINDCX')}>Reconcile CoinDCX</button>
           <button className="btn-ghost" disabled={state.busy} onClick={() => actions.dailyClose()}>Daily close</button>
-          {state.environment === 'simulation' && <button className="btn-ghost" disabled={state.busy} onClick={() => { if (confirm('Erase the simulation book and start again from ₹10,000?')) actions.reset(); }}>Reset simulation</button>}
+          {state.environment === 'simulation' && <ConfirmButton label="Reset simulation" confirmLabel="Erase simulation & restart at ₹10,000" disabled={state.busy} onConfirm={() => actions.reset()} />}
         </div>
         <p className="mt-2 text-xs text-slate-500">Execution mode: <strong>{state.settings?.executionMode}</strong>. In manual-approval mode every entry needs the owner to arm the signal; protective stop/target exits of approved trades run automatically.</p>
       </Section>

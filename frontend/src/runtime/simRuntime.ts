@@ -92,8 +92,8 @@ export class SimRuntime {
   private publish(all = false) {
     for (const s of SYNTHETIC_UNIVERSE) {
       const b = this.base.get(s.symbol)!;
-      this.market.upsertCandles(s.venue, s.symbol, '5m', b);
-      if (all || this.clock % (15 * 60_000) === 0) for (const tf of TFS) this.market.upsertCandles(s.venue, s.symbol, tf, resample(b, TIMEFRAME_MINUTES[tf] * 60_000));
+      this.market.setCandles(s.venue, s.symbol, '5m', b);
+      if (all || this.clock % (15 * 60_000) === 0) for (const tf of TFS) this.market.setCandles(s.venue, s.symbol, tf, resample(b, TIMEFRAME_MINUTES[tf] * 60_000));
       const last = b[b.length - 1];
       const live = s.session === '24x7' || isNseOpen(this.clock - 1);
       // Outside NSE hours the last quote keeps its old timestamp, so the engine sees it as stale.
@@ -120,6 +120,8 @@ export class SimRuntime {
     this.base.set(symbol, out);
     // keep the synthetic walk continuing from the scenario's last price
     (this.synth as unknown as { state: Map<string, { price: number }> }).state.get(symbol)!.price = out[out.length - 1].close;
+    // the scripted setup ends now, so its last close is the current (simulated) quote
+    this.market.upsertQuote(this.synth.quoteFrom(s, out[out.length - 1], this.clock));
   }
 
   async step(bars: number) {

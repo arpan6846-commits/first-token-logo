@@ -20,6 +20,10 @@ No public users, no third-party money, no pooled funds, no advice.
 | `tests/` | 83 automated tests (acceptance, unit, adapters, integration, end-to-end). |
 | `docs/` | Status, test results, architecture, compliance, deployment checklist. |
 
+## Use it now (hosted, simulation)
+
+A ready-to-use build of the simulation app is published as a private Claude artifact: https://claude.ai/artifact/RdKAomc263kQwJ2AdunC5q. Rebuild it with `cd frontend && npm run build:standalone` (single self-contained HTML in `frontend/standalone/`).
+
 ## Run it locally (simulation)
 
 ```bash

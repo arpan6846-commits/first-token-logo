@@ -27,6 +27,10 @@ export class MarketDataCache {
     for (const c of cs) m.set(c.ts, c);
     this.candles.set(k, [...m.values()].sort((a, b) => a.ts - b.ts).slice(-2000));
   }
+  /** Replace the whole series (used when the caller holds the authoritative history). */
+  setCandles(venue: Venue, symbol: string, tf: Timeframe, cs: Candle[]) {
+    this.candles.set(`${venue}:${symbol}:${tf}`, [...cs].sort((a, b) => a.ts - b.ts).slice(-2000));
+  }
   /** Closed candles only: drops a candle whose period has not ended at `now`. */
   closedCandles(venue: Venue, symbol: string, tf: Timeframe, now: number): Candle[] {
     const tfMs = TIMEFRAME_MINUTES[tf] * 60_000;

@@ -1,6 +1,6 @@
 import { KeyRound, LogIn, ShieldOff } from 'lucide-react';
 import { useApp } from '../runtime/AppContext.tsx';
-import { Empty, PageHeader, Section, StatusPill, ago } from '../components/ui.tsx';
+import { ConfirmButton, Empty, PageHeader, Section, StatusPill, ago } from '../components/ui.tsx';
 import type { Venue } from '@core/types.ts';
 
 const CAPS: Record<'KITE' | 'COINDCX', { title: string; points: string[]; verify: string[] }> = {
@@ -54,7 +54,7 @@ export function Connections() {
       </div>
       <Section title="Credential revocation" className="mt-4">
         <div className="flex flex-wrap items-center gap-3">
-          <button className="btn-danger" disabled={state.mode !== 'base44' || state.busy} onClick={() => { if (confirm('Activate the kill switch, invalidate the Kite session and mark all production connections REVOKED?')) actions.revokeCredentials(); }}><ShieldOff size={14} />Revoke credentials & stop trading</button>
+          <ConfirmButton className="btn-danger" label="Revoke credentials & stop trading" confirmLabel="Yes: kill switch on, revoke Kite session, mark connections REVOKED" disabled={state.mode !== 'base44' || state.busy} onConfirm={() => actions.revokeCredentials()}><ShieldOff size={14} /></ConfirmButton>
           <span className="text-xs text-slate-400"><KeyRound size={12} className="mr-1 inline" />Also delete the CoinDCX key in its dashboard and regenerate the Kite API secret; then rotate the Base44 secrets.</span>
         </div>
       </Section>

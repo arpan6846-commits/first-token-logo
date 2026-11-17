@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
 import './index.css';
 import { AppProvider } from './runtime/AppContext.tsx';
 import { Layout } from './components/Layout.tsx';
@@ -17,10 +18,23 @@ import { Automation } from './pages/Automation.tsx';
 import { SettingsPage } from './pages/Settings.tsx';
 import { Audit } from './pages/Audit.tsx';
 
+// Static hosting (single-file build) uses an in-memory router mirrored to a plain #name.
+const HASH_ROUTER = import.meta.env.VITE_ROUTER === 'hash';
+const toHash = (path: string) => (path === '/' ? '' : path.slice(1) === 'settings' ? 'app-settings' : path.slice(1));
+const fromHash = () => { const h = window.location.hash.replace(/^#/, ''); return h === 'app-settings' ? '/settings' : h ? `/${h}` : '/'; };
+function HashSync() {
+  const loc = useLocation();
+  useEffect(() => { try { history.replaceState(null, '', toHash(loc.pathname) ? `#${toHash(loc.pathname)}` : window.location.pathname + window.location.search); } catch { /* ignore */ } }, [loc.pathname]);
+  return null;
+}
+function AppRouter({ children }: { children: ReactNode }) {
+  return HASH_ROUTER ? <MemoryRouter initialEntries={[fromHash()]}><HashSync />{children}</MemoryRouter> : <BrowserRouter>{children}</BrowserRouter>;
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppProvider>
-      <BrowserRouter>
+      <AppRouter>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -38,7 +52,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="audit" element={<Audit />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </AppRouter>
     </AppProvider>
   </React.StrictMode>,
 );
