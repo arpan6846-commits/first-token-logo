@@ -66,6 +66,7 @@ export interface VenueHolding { symbol: string; qty: number; avgPrice: number }
 export type AdapterErrorKind = 'NETWORK' | 'TIMEOUT' | 'AUTH' | 'REJECTED' | 'RATE_LIMIT' | 'UNSUPPORTED' | 'INVALID' | 'UNAVAILABLE';
 
 export class AdapterError extends Error {
+  override name = 'AdapterError';
   constructor(public kind: AdapterErrorKind, message: string, public raw?: unknown) { super(message); }
   /** True when we cannot know whether the venue accepted the order. */
   get outcomeUnknown() { return this.kind === 'NETWORK' || this.kind === 'TIMEOUT'; }

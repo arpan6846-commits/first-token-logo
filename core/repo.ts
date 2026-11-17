@@ -53,10 +53,12 @@ export interface Repo {
 }
 
 export class UniqueConstraintError extends Error {
+  override name = 'UniqueConstraintError';
   constructor(public key: string) { super(`Unique constraint violated: ${key}`); }
 }
 export class ImmutableRecordError extends Error {
-  constructor(name: string) { super(`${name} records are append-only and cannot be updated`); }
+  override name = 'ImmutableRecordError';
+  constructor(entity: string) { super(`${entity} records are append-only and cannot be updated`); }
 }
 
 interface MemoryOpts<T> { name: string; unique?: (d: T) => string[]; appendOnly?: boolean; }

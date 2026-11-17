@@ -1,0 +1,84 @@
+{
+  "name": "MarketData",
+  "type": "object",
+  "title": "MarketData",
+  "description": "Latest quote and recent closed candles per symbol/timeframe, written by the worker. Always carries its source and exchange timestamp. Indexes (enforced by the engine/worker as single writer): venue+symbol+timeframe (unique); receivedAt.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "KITE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "timeframe": {
+      "type": "string",
+      "enum": [
+        "quote",
+        "5m",
+        "15m",
+        "1h",
+        "4h",
+        "1d",
+        "1w",
+        "1M"
+      ]
+    },
+    "quote": {
+      "type": "object"
+    },
+    "candles": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "maxItems": 600
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "BROKER",
+        "PAPER_FEED",
+        "SIMULATED",
+        "HISTORICAL",
+        "ESTIMATE",
+        "MANUAL"
+      ]
+    },
+    "exchangeTs": {
+      "type": "integer"
+    },
+    "receivedAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "venue",
+    "symbol",
+    "timeframe",
+    "source"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

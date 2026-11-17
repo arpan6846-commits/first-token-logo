@@ -61,6 +61,8 @@ export class TradingEngine {
   }
 
   get source(): DataSource { return this.env === 'production' ? 'BROKER' : this.env === 'paper' ? 'PAPER_FEED' : 'SIMULATED'; }
+  setAdapter(v: Venue, a: VenueAdapter | undefined) { this.oms.setAdapter(v, a); if (a) this.adapters[v] = a; else delete this.adapters[v]; }
+  hasAdapter(v: Venue) { return !!this.adapters[v]; }
   instrument(venue: Venue, symbol: string) { return this.instruments.get(`${venue}:${symbol}`); }
   listInstruments() { return [...this.instruments.values()]; }
   setInstruments(list: Instrument[]) { for (const i of list) this.instruments.set(`${i.venue}:${i.symbol}`, i); }

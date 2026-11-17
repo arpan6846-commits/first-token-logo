@@ -1,0 +1,115 @@
+{
+  "name": "APIConnections",
+  "type": "object",
+  "title": "APIConnections",
+  "description": "Venue connection state. The encrypted session field is never readable from the browser (FLS). Indexes (enforced by the engine/worker as single writer): environment+venue (unique).",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "KITE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NOT_CONFIGURED",
+        "CREDENTIALS_PRESENT",
+        "AUTHENTICATED",
+        "TESTED_READ_ONLY",
+        "TESTED_ORDERS_SANDBOX",
+        "EXPIRED",
+        "ERROR",
+        "REVOKED"
+      ]
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": "boolean"
+        },
+        "trade": {
+          "type": "boolean"
+        },
+        "withdraw": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sessionExpiresAt": {
+      "type": "integer"
+    },
+    "lastHealthCheckAt": {
+      "type": "integer"
+    },
+    "lastHealthOk": {
+      "type": "boolean"
+    },
+    "lastError": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "capabilitiesVerifiedAt": {
+      "type": "integer"
+    },
+    "capabilityNotes": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "feedHealthy": {
+      "type": "boolean"
+    },
+    "lastFeedTickAt": {
+      "type": "integer"
+    },
+    "encryptedSession": {
+      "type": "string",
+      "description": "AES-GCM ciphertext of the venue session token",
+      "rls": {
+        "read": false,
+        "write": false
+      }
+    },
+    "loginStateHash": {
+      "type": "string",
+      "rls": {
+        "read": false,
+        "write": false
+      }
+    }
+  },
+  "required": [
+    "uid",
+    "venue",
+    "environment",
+    "status"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": [], "lib": ["ES2022", "DOM"] },
+  "include": ["types/**/*.d.ts", "worker/**/*.ts", "base44/functions/**/*.ts", "base44/shared/*.ts"]
+}

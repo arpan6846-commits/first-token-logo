@@ -37,7 +37,7 @@ export interface PostInput {
   ts?: number;
 }
 
-export class LedgerError extends Error {}
+export class LedgerError extends Error { override name = 'LedgerError'; }
 
 const PROD_ALLOWED_SOURCES: DataSource[] = ['BROKER', 'MANUAL', 'ESTIMATE'];
 

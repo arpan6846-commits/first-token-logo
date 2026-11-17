@@ -1,0 +1,4 @@
+{
+  "name": "revokeCredentials",
+  "entry": "entry.ts"
+}

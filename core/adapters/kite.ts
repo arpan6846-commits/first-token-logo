@@ -177,6 +177,27 @@ export class KiteAdapter implements VenueAdapter {
     return (await this.get<KiteTrade[]>('/trades')).map((t) => this.trade(t)).filter((t) => t.ts >= sinceTs);
   }
 
+  /** Loads tick/lot size and instrument tokens from the instruments CSV dump for the given symbols. */
+  async loadInstruments(symbols: string[]): Promise<{ symbol: string; token: number; tickSize: number; lotSize: number }[]> {
+    const res = await this.f(`${KITE_API}/instruments/${this.ex}`, { headers: this.headers });
+    if (!res.ok) throw new AdapterError(res.status === 403 ? 'AUTH' : 'UNAVAILABLE', `instruments dump HTTP ${res.status}`);
+    const [head, ...rows] = (await res.text()).trim().split('\n');
+    const cols = head.split(',');
+    const ix = (n: string) => cols.indexOf(n);
+    const want = new Set(symbols);
+    const out: { symbol: string; token: number; tickSize: number; lotSize: number }[] = [];
+    for (const r of rows) {
+      const c = r.split(',');
+      const sym = c[ix('tradingsymbol')];
+      if (!want.has(sym) || c[ix('segment')] !== this.ex || c[ix('instrument_type')] !== 'EQ') continue;
+      const token = Number(c[ix('instrument_token')]);
+      this.tokens.set(sym, token);
+      out.push({ symbol: sym, token, tickSize: Number(c[ix('tick_size')]), lotSize: Number(c[ix('lot_size')]) || 1 });
+    }
+    return out;
+  }
+  tokenOf(symbol: string) { return this.tokens.get(symbol); }
+
   /** Builds the WebSocket URL; the worker owns the long-lived socket (see worker/kiteTicker.ts). */
   tickerUrl() { return `wss://ws.kite.trade?api_key=${encodeURIComponent(this.cfg.apiKey)}&access_token=${encodeURIComponent(this.cfg.accessToken)}`; }
   subscribe?: (symbols: string[], onEvent: (e: MarketEvent) => void) => () => void;

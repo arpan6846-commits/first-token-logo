@@ -58,6 +58,12 @@ export class OrderManager {
     return this.env === 'production' ? 'BROKER' : this.env === 'paper' ? 'PAPER_FEED' : 'SIMULATED';
   }
 
+  /** Swap a venue adapter at runtime (e.g. a new daily Kite session). Mode rules still apply. */
+  setAdapter(v: Venue, a: VenueAdapter | undefined) {
+    if (a && !adapterAllowedFor(this.env, a.mode)) throw new Error(`Environment ${this.env} cannot use a ${a.mode} adapter for ${v}`);
+    if (a) this.adapters[v] = a; else delete this.adapters[v];
+  }
+
   adapter(v: Venue): VenueAdapter {
     const a = this.adapters[v];
     if (!a) throw new AdapterError('UNAVAILABLE', `No ${v} adapter configured for ${this.env}`);

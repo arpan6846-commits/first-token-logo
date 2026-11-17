@@ -1,0 +1,69 @@
+{
+  "name": "AutomationLogs",
+  "type": "object",
+  "title": "AutomationLogs",
+  "description": "Append-only job log. runKey makes every scheduled job idempotent. Indexes (enforced by the engine/worker as single writer): environment+runKey; ts.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "ts": {
+      "type": "integer"
+    },
+    "job": {
+      "type": "string"
+    },
+    "runKey": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "STARTED",
+        "SUCCESS",
+        "SKIPPED",
+        "FAILED"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "actor": {
+      "type": "string"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "ts",
+    "job",
+    "runKey",
+    "status"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

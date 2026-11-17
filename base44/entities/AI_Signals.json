@@ -1,0 +1,192 @@
+{
+  "name": "AI_Signals",
+  "type": "object",
+  "title": "AI_Signals",
+  "description": "Every signal, decision and rejection with its rationale and Final Check. Indexes (enforced by the engine/worker as single writer): environment+status; environment+symbol+createdAt; createdAt.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "KITE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "assetClass": {
+      "type": "string",
+      "enum": [
+        "EQUITY",
+        "CRYPTO"
+      ]
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "timeframe": {
+      "type": "string"
+    },
+    "htf": {
+      "type": "string"
+    },
+    "entry": {
+      "type": "number"
+    },
+    "stop": {
+      "type": "number"
+    },
+    "target": {
+      "type": "number"
+    },
+    "qty": {
+      "type": "number",
+      "minimum": 0
+    },
+    "rr": {
+      "type": "number"
+    },
+    "rrNetOfCosts": {
+      "type": "number"
+    },
+    "plannedRiskPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "estFeesPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "estSlippagePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "rationale": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invalidation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "retailIllusion": {
+      "type": "string"
+    },
+    "areaAnswers": {
+      "type": "object"
+    },
+    "setupType": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "CANDIDATE",
+        "REJECTED",
+        "VALIDATED",
+        "WATCHLIST",
+        "APPROVED",
+        "EXECUTED",
+        "EXPIRED"
+      ]
+    },
+    "rejectionReasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dataAsOf": {
+      "type": "integer"
+    },
+    "dataSource": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "BROKER",
+        "PAPER_FEED",
+        "SIMULATED",
+        "HISTORICAL",
+        "ESTIMATE",
+        "MANUAL"
+      ]
+    },
+    "finalCheck": {
+      "type": "object"
+    },
+    "aiReview": {
+      "type": "object"
+    },
+    "createdAt": {
+      "type": "integer"
+    },
+    "sector": {
+      "type": "string"
+    },
+    "isRangeTrade": {
+      "type": "boolean"
+    },
+    "ownerApprovedAt": {
+      "type": "integer"
+    },
+    "armedAt": {
+      "type": "integer"
+    },
+    "triggerExpiresAt": {
+      "type": "integer"
+    },
+    "orderId": {
+      "type": "string"
+    },
+    "expiryReason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "symbol",
+    "venue",
+    "status",
+    "createdAt"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "name": "Asset",
+  "type": "object",
+  "title": "Asset",
+  "description": "Instrument metadata loaded from the broker/exchange (tick, lot, min size). Indexes (enforced by the engine/worker as single writer): venue+symbol (unique); sector.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "symbol": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "KITE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "assetClass": {
+      "type": "string",
+      "enum": [
+        "EQUITY",
+        "CRYPTO"
+      ]
+    },
+    "exchange": {
+      "type": "string",
+      "enum": [
+        "NSE",
+        "BSE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "tickSize": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "lotSize": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "minQty": {
+      "type": "number",
+      "minimum": 0
+    },
+    "qtyDecimals": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12
+    },
+    "minNotionalPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "sector": {
+      "type": "string"
+    },
+    "instrumentToken": {
+      "type": "integer"
+    },
+    "fnoEligible": {
+      "type": "boolean"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "BROKER",
+        "PAPER_FEED",
+        "SIMULATED",
+        "HISTORICAL",
+        "ESTIMATE",
+        "MANUAL"
+      ]
+    },
+    "loadedAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "symbol",
+    "venue",
+    "assetClass",
+    "tickSize",
+    "lotSize"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}
