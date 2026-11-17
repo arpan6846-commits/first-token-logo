@@ -81,7 +81,7 @@ export class SyntheticMarket {
     }
     hi *= 1 + Math.abs(this.gauss()) * sym.vol * 0.2; lo *= 1 - Math.abs(this.gauss()) * sym.vol * 0.2;
     st.price = p;
-    const q = (x: number) => Math.max(sym.tick, Math.round(x / sym.tick) * sym.tick);
+    const q = (x: number) => Math.max(sym.tick, Number((Math.round(x / sym.tick) * sym.tick).toFixed(6)));
     return { ts, open: q(open), high: q(Math.max(hi, open, p)), low: q(Math.min(lo, open, p)), close: q(p), volume: Math.round(1000 + this.rng() * 9000) };
   }
 

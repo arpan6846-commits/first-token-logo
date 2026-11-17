@@ -29,12 +29,12 @@ function longSetupPath(): number[] {
 export function scriptedLongSetup(endTs: number, tfMs: number, refPrice = 150, tick = 0.05): Candle[] {
   const path = longSetupPath();
   const k = refPrice / 150;
-  const q = (x: number) => Math.max(tick, Math.round((x * k) / tick) * tick);
+  const q = (x: number) => Math.max(tick, Number((Math.round((x * k) / tick) * tick).toFixed(6)));
   const n = path.length - 1;
   const out: Candle[] = [];
   for (let i = 1; i <= n; i++) {
     const o = path[i - 1], c = path[i];
-    const wick = Math.max(0.12, Math.abs(c - o) * 0.25);
+    const wick = 0.12; // uniform small wicks: no accidental pivots above the build-up
     out.push({ ts: endTs - (n - i + 1) * tfMs, open: q(o), high: q(Math.max(o, c) + wick), low: q(Math.min(o, c) - wick), close: q(c), volume: 1000 });
   }
   return out;

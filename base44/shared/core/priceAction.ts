@@ -183,10 +183,10 @@ export function territory(c: Candle[], sustain = 2, k = 2): Territory {
     }
     if (state.side !== 'BUYERS' && lastH && closesAbove(lastH.wick) >= sustain && (state.breachIdx === undefined || lastH.i > state.breachIdx)) {
       const init = startOfMove(c, i, 'UP');
-      state = { side: 'BUYERS', breachLevel: lastH.wick, breachIdx: i, initiatorIdx: init, initiatorLevel: c[init].low, sustainedCloses: closesAbove(lastH.wick), note: `Reacted high ${lastH.wick} broken with ${sustain}+ closes` };
+      state = { side: 'BUYERS', breachLevel: lastH.wick, breachIdx: i, initiatorIdx: init, initiatorLevel: c[init].low, sustainedCloses: closesAbove(lastH.wick), note: `Reacted high ${+lastH.wick.toFixed(6)} broken with ${sustain}+ closes` };
     } else if (state.side !== 'SELLERS' && lastL && closesBelow(lastL.wick) >= sustain && (state.breachIdx === undefined || lastL.i > state.breachIdx)) {
       const init = startOfMove(c, i, 'DOWN');
-      state = { side: 'SELLERS', breachLevel: lastL.wick, breachIdx: i, initiatorIdx: init, initiatorLevel: c[init].high, sustainedCloses: closesBelow(lastL.wick), note: `Reacted low ${lastL.wick} broken with ${sustain}+ closes` };
+      state = { side: 'SELLERS', breachLevel: lastL.wick, breachIdx: i, initiatorIdx: init, initiatorLevel: c[init].high, sustainedCloses: closesBelow(lastL.wick), note: `Reacted low ${+lastL.wick.toFixed(6)} broken with ${sustain}+ closes` };
     }
   }
   return state;
