@@ -200,6 +200,11 @@ export interface AISignal {
   createdAt: number;
   sector?: string;
   isRangeTrade?: boolean;
+  ownerApprovedAt?: number;    // owner approved the plan (entry/stop/target/qty); arms the trigger
+  armedAt?: number;
+  triggerExpiresAt?: number;
+  orderId?: string;
+  expiryReason?: string;
 }
 
 export type RiskSeverity = 'INFO' | 'WARN' | 'BLOCK' | 'HALT';

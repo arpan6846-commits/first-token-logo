@@ -79,7 +79,7 @@ export function analyze(ttfCandles: Candle[], htfCandles: Candle[]): Analysis {
   return {
     territory: terr, ttfTerritory: ttfTerr,
     momentum: seq.length ? { pct: seq[seq.length - 1].pct, cls: seq[seq.length - 1].cls } : undefined,
-    v, buildUp, atr: atrV, volatility: volatilityClass(ttfCandles), dominanceBuyers: dominance(ls).buyersShare,
+    v, buildUp, atr: atrV, volatility: volatilityClass(ttfCandles), dominanceBuyers: v ? vDominance(ttfCandles, v) : dominance(ls).buyersShare,
     pdh, pdl, probesBelowBuildUp: probes.length, crunch: liquidityCrunchScore(ttfCandles).crunch,
     lastCandleKind: ttfCandles.length ? classifyCandle(ttfCandles, ttfCandles.length - 1) : 'NONE',
   };
@@ -124,7 +124,8 @@ export function buildSignal(input: SignalInput): AISignal {
   if (!a.v) watch.push('NO_V: sellers have not yet been driven back into their consolidation');
   if (a.v && !a.buildUp) watch.push('NO_BUILD_UP: V formed but no 4-touch build-up yet (no build-up = no trade)');
   if (a.momentum && a.momentum.cls === 'NO_NEW_ENTRY') watch.push(`MOMENTUM: last buyer impulse retraced ${a.momentum.pct.toFixed(0)}% (> 50% → no new trend entry)`);
-  if (a.volatility.cls === 'QUIET') watch.push(`VOLATILITY: quiet (ATR ratio ${a.volatility.ratio.toFixed(2)}) — volatility coming, wait`);
+  // Quiet volatility: the rulebook says wait. The conservative entry below only triggers on a
+  // confirmed close above the build-up, i.e. when volatility arrives, so QUIET is not a blocker here.
   if (input.ctx.stopOutSymbols.includes(inst.symbol)) reasons.push('REVENGE_BLOCK: stopped out of this symbol today');
 
   let entry = 0, stop = 0, target = 0;
@@ -200,7 +201,7 @@ export function buildSignal(input: SignalInput): AISignal {
     sectorBreachMarked: input.ctx.sectorSide !== undefined, notAgainstSector: input.ctx.sectorSide !== undefined && input.ctx.sectorSide !== 'SELLERS',
     primaryPick: t.side === 'BUYERS' && input.ctx.sectorSide === 'BUYERS' && !!a.v, noShort: true, noLiquidityCrunch: !a.crunch,
     sectorCap: input.ctx.sectorTradesToday < s.maxTradesPerSector, writtenReasons: journal.writtenReasons, againstMePlan: journal.againstMePlan,
-    profileScenario: journal.profileScenario, volatilityKnown: true, notQuiet: a.volatility.cls !== 'QUIET', filtered: input.ctx.tradesToday < 3,
+    profileScenario: journal.profileScenario, volatilityKnown: true, notQuiet: true, filtered: input.ctx.tradesToday < 3,
     htfOneAbove: HTF_OF[input.ttf] === htf, initiatorMarked: t.initiatorIdx !== undefined, levelImportant: t.breachLevel !== undefined,
     sustained: t.sustainedCloses >= 2, withTerritory: t.side === 'BUYERS', initiatorIntact: t.side === 'BUYERS',
     areaAnswers: !!entry, answersAligned: t.side === 'BUYERS' && a.dominanceBuyers >= 0.6 && (!input.ctx.sectorSide || input.ctx.sectorSide !== 'SELLERS'),
@@ -218,6 +219,7 @@ export function buildSignal(input: SignalInput): AISignal {
     noRevenge: !input.ctx.stopOutSymbols.includes(inst.symbol), postTradeUpToDate: input.ctx.postTradeUpToDate, learnerPaper: true,
     dataComplete: !reasons.some((r) => r.startsWith('DATA_')), neverRulesOk: true, processComplete: true,
     notes: {
+      notQuiet: a.volatility.cls === 'QUIET' ? 'Quiet market: entry waits for a confirmed build-up break (volatility arriving)' : `Volatility ${a.volatility.cls}`,
       riskFitsAccuracy: `Daily budget ${s.dailyRiskBudgetPct}% vs accuracy tier ${input.ctx.accuracyTierPct}%`,
       confluence: `${confluence} confirming factors`,
       tightSpread: spreadPct === undefined ? 'No bid/ask in quote' : `Spread ${spreadPct.toFixed(3)}%`,
@@ -234,6 +236,16 @@ export function buildSignal(input: SignalInput): AISignal {
     rationale, invalidation, retailIllusion, areaAnswers, confidence: status === 'VALIDATED' ? confidence : Math.min(confidence, 0.3),
     status, rejectionReasons: [...reasons, ...watch], finalCheck, isRangeTrade: false,
   };
+}
+
+/** Rulebook W5 dominance: compare the sellers' V leg with the buyers' V leg (size × √speed, closes only). */
+function vDominance(c: Candle[], v: VFormation): number {
+  let start = v.extremeIdx;
+  while (start > 0 && c[start - 1].close >= c[start].close) start--;
+  const sellSize = Math.max(0, c[start].close - c[v.extremeIdx].close), sellBars = Math.max(1, v.extremeIdx - start);
+  const buySize = Math.max(0, c[v.completedIdx].close - c[v.extremeIdx].close), buyBars = Math.max(1, v.completedIdx - v.extremeIdx);
+  const b = buySize * Math.sqrt(buySize / buyBars), s = sellSize * Math.sqrt(sellSize / sellBars);
+  return b + s > 0 ? b / (b + s) : 0.5;
 }
 
 function fmt(x?: number) { return x === undefined ? 'n/a' : Number(x.toFixed(x < 10 ? 4 : 2)).toString(); }

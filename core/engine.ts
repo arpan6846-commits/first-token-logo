@@ -14,15 +14,16 @@ import { buildPositions, equityView, posKey, type EquityView } from './portfolio
 import { dailyRiskBudgetPct, evaluateFinalCheck, FINAL_CHECK, psychologyAlerts } from './propDesk.ts';
 import { reconcileVenue } from './reconciliation.ts';
 import type { AuditRecord, Repo, SystemState } from './repo.ts';
-import type { OrderProposal, RiskContext } from './risk.ts';
+import { sizePosition, type OrderProposal, type RiskContext } from './risk.ts';
 import { applySettingsChange, defaultSettings, type SettingsChangeResult } from './settings.ts';
 import { buildSignal, HTF_OF, type SignalContext } from './signals.ts';
-import { territory } from './priceAction.ts';
+import { lastAtr, territory } from './priceAction.ts';
+import { roundToTick } from './money.ts';
 import type {
   Actor, AISignal, APIConnection, AutomationLog, DailySnapshot, DataSource, Environment, Instrument, JournalEntry, KillSwitchState,
   StrategySettings, TradeFill, TradeOrder, Venue,
 } from './types.ts';
-import { TERMINAL_STATUSES } from './types.ts';
+import { TERMINAL_STATUSES, TIMEFRAME_MINUTES } from './types.ts';
 
 export interface EngineDeps {
   repo: Repo;
@@ -311,38 +312,86 @@ export class TradingEngine {
     return out;
   }
 
-  /** Owner (or auto mode, after Phase 5) turns a validated signal into an order. Risk is re-checked. */
-  async executeSignal(signalId: string, opts: SubmitOptions & { manualTicks?: Record<number, boolean> }): Promise<SubmitResult> {
+  /**
+   * Owner approves a VALIDATED signal (or auto mode does, after the phase gate).
+   * The signal is ARMED: the order is sent only when a closed candle confirms the
+   * build-up break, never on the breaking candle and never chasing. Risk is
+   * re-checked at trigger time.
+   */
+  async approveSignal(signalId: string, opts: SubmitOptions & { manualTicks?: Record<number, boolean> }): Promise<{ signal: AISignal; result?: SubmitResult }> {
     const sig = await this.repo.signals.get(signalId);
     if (!sig) throw new Error('Signal not found');
     if (sig.environment !== this.env) throw new Error('Signal belongs to another environment');
-    if (sig.status !== 'VALIDATED' && sig.status !== 'APPROVED') throw new Error(`Signal is ${sig.status}; only VALIDATED signals can be executed`);
-    if (opts.actor === 'ai') throw new Error('AI cannot execute signals');
+    if (sig.status !== 'VALIDATED') throw new Error(`Signal is ${sig.status}; only VALIDATED signals can be approved`);
+    if (opts.actor === 'ai') throw new Error('AI cannot approve signals');
     const s = await this.settings();
-    if (opts.actor !== 'owner' && !(s.executionMode === 'auto' && s.phase >= 3)) throw new Error('Automatic execution requires owner-enabled auto mode');
-    // apply owner manual ticks to the Final Check
+    const auto = opts.actor !== 'owner';
+    if (auto && !(s.executionMode === 'auto' && s.phase >= 3)) throw new Error('Automatic approval requires owner-enabled auto mode after Phase 3');
+    if (this.env === 'production' && auto) throw new Error('Production signals need the owner (auto mode places orders only after the owner arms them)');
+    if (this.env === 'production' && !s.firstLiveOrderConfirmedAt) throw new Error('Confirm the first live order in Settings before arming production signals');
     let fc = sig.finalCheck;
-    if (fc && opts.manualTicks) {
+    if (fc) {
       const facts: Record<string, boolean> = {};
-      for (const it of fc.items) { const def = FINAL_CHECK.find((d) => d[0] === it.id); if (def?.[3] && it.pass !== null) facts[def[3]] = it.pass || facts[def[3]] === true; }
+      for (const it of fc.items) { const def = FINAL_CHECK.find((d) => d[0] === it.id); if (def?.[3] && it.pass !== null) facts[def[3]] = (facts[def[3]] ?? true) && it.pass; }
       const j = await this.journalFor(signalId);
       if (j) { facts.writtenReasons = !!(j.sectorWhy && j.stockWhy && j.positionWhy); facts.againstMePlan = !!j.againstMePlan; facts.profileScenario = !!j.profileScenario; }
-      fc = evaluateFinalCheck({ ...facts, processComplete: true }, opts.manualTicks);
+      const ticks = { ...Object.fromEntries(fc.items.filter((i) => i.mode === 'manual' && i.pass !== null).map((i) => [i.id, i.pass as boolean])), ...(opts.manualTicks ?? {}) };
+      fc = evaluateFinalCheck({ ...facts, processComplete: true }, ticks);
+    }
+    if (this.env !== 'simulation' && !fc?.passed) {
       await this.repo.signals.update(sig.id, { finalCheck: fc });
+      throw new Error(`Final Check not passed (failed: ${fc?.failed.join(', ') || '-'}; pending owner: ${fc?.pendingManual.join(', ') || '-'})`);
     }
-    const p: OrderProposal = {
-      environment: this.env, venue: sig.venue, symbol: sig.symbol, assetClass: sig.assetClass, side: 'BUY', qty: sig.qty,
-      orderType: 'LIMIT', product: sig.assetClass === 'EQUITY' ? 'CNC' : 'SPOT', limitPrice: sig.entry, stopPrice: sig.stop,
-      targetPrice: sig.target, timeframe: sig.timeframe, sector: sig.sector, isRangeTrade: sig.isRangeTrade,
-      idempotencyKey: `signal:${sig.id}`, signalId: sig.id,
-    };
-    const ctx = await this.riskContext({ venue: sig.venue, symbol: sig.symbol, assetClass: sig.assetClass, signal: { ...sig, finalCheck: fc } });
-    const res = await this.oms.submit(p, ctx, opts);
-    if (!res.duplicate) {
-      await this.repo.signals.update(sig.id, { status: res.order.status === 'RISK_REJECTED' ? 'REJECTED' : 'EXECUTED', rejectionReasons: res.order.status === 'RISK_REJECTED' ? [...sig.rejectionReasons, `RISK: ${res.order.rejectionReason}`] : sig.rejectionReasons });
-      await this.audit(opts.actor, 'EXECUTE_SIGNAL', { signalId, orderId: res.order.id, status: res.order.status });
+    const now = this.clock();
+    const tfMs = TIMEFRAME_MINUTES[sig.timeframe] * 60_000;
+    const armed = await this.repo.signals.update(sig.id, {
+      status: 'APPROVED', finalCheck: fc, ownerApprovedAt: opts.actor === 'owner' ? now : undefined, armedAt: now, triggerExpiresAt: now + 8 * tfMs,
+    });
+    await this.audit(opts.actor, 'ARM_SIGNAL', { signalId, symbol: sig.symbol, entry: sig.entry, stop: sig.stop, target: sig.target, qty: sig.qty });
+    const triggered = await this.checkArmedSignals([armed.id]);
+    return { signal: (await this.repo.signals.get(sig.id))!, result: triggered[0] };
+  }
+
+  /** Fires armed signals whose break is confirmed by a closed candle; expires invalidated ones. */
+  async checkArmedSignals(ids?: string[]): Promise<SubmitResult[]> {
+    const now = this.clock();
+    const all = (await this.repo.signals.list({ environment: this.env, status: 'APPROVED' } as Partial<AISignal>)).filter((x) => !ids || ids.includes(x.id));
+    const out: SubmitResult[] = [];
+    for (const sig of all) {
+      const inst = this.instrument(sig.venue, sig.symbol);
+      const candles = this.market.closedCandles(sig.venue, sig.symbol, sig.timeframe, now);
+      const last = candles[candles.length - 1];
+      const q = this.market.quote(sig.venue, sig.symbol);
+      const expire = async (reason: string) => { await this.repo.signals.update(sig.id, { status: 'EXPIRED', expiryReason: reason }); await this.audit('system', 'SIGNAL_EXPIRED', { signalId: sig.id, reason }); };
+      if (!last || !q || !inst) continue;                         // no data → never trade on missing data
+      if (last.close < sig.stop) { await expire(`Invalidated: ${sig.timeframe} close ${last.close} below stop ${sig.stop}`); continue; }
+      if (sig.triggerExpiresAt && now > sig.triggerExpiresAt) { await expire('No confirmed break within 8 bars'); continue; }
+      if (last.ts + TIMEFRAME_MINUTES[sig.timeframe] * 60_000 <= (sig.armedAt ?? 0) && last.close < sig.entry) continue; // wait for a new close
+      if (last.close < sig.entry - inst.tickSize) continue;      // break not confirmed yet
+      const atr = lastAtr(candles);
+      if (q.ltp > sig.entry + 0.5 * atr) { await expire(`Price ${q.ltp} ran > 0.5 ATR above ${sig.entry} — not chasing`); continue; }
+      const limit = roundToTick(Math.min(q.ask ?? q.ltp, sig.entry + 0.25 * atr), inst.tickSize, 'up');
+      // re-size at the actual limit so planned risk (incl. costs) never exceeds what the owner approved
+      const eqNow = (await this.equity()).netEquityPaise;
+      const rs = sizePosition({ equityPaise: eqNow, riskPct: (sig.plannedRiskPaise / Math.max(1, eqNow)) * 100, entry: limit, stop: sig.stop, assetClass: sig.assetClass, qtyDecimals: inst.qtyDecimals, lotSize: inst.lotSize, maxNotionalPaise: Math.ceil(sig.qty * limit * 100) });
+      const qty = Math.min(sig.qty, rs.qty);
+      if (qty <= 0) { await expire(`Risk no longer fits at ${limit}: ${rs.reason}`); continue; }
+      const p: OrderProposal = {
+        environment: this.env, venue: sig.venue, symbol: sig.symbol, assetClass: sig.assetClass, side: 'BUY', qty,
+        orderType: 'LIMIT', product: sig.assetClass === 'EQUITY' ? 'CNC' : 'SPOT', limitPrice: limit, stopPrice: sig.stop,
+        targetPrice: sig.target, timeframe: sig.timeframe, sector: sig.sector, isRangeTrade: sig.isRangeTrade,
+        idempotencyKey: `signal:${sig.id}`, signalId: sig.id,
+      };
+      const ctx = await this.riskContext({ venue: sig.venue, symbol: sig.symbol, assetClass: sig.assetClass, signal: sig });
+      const res = await this.oms.submit(p, ctx, { actor: sig.ownerApprovedAt ? 'owner' : 'system', ownerPreApprovedAt: sig.ownerApprovedAt });
+      if (!res.duplicate) {
+        const rejected = res.order.status === 'RISK_REJECTED';
+        await this.repo.signals.update(sig.id, { status: rejected ? 'REJECTED' : 'EXECUTED', orderId: res.order.id, rejectionReasons: rejected ? [...sig.rejectionReasons, `RISK: ${res.order.rejectionReason}`] : sig.rejectionReasons });
+        await this.audit('system', 'SIGNAL_TRIGGERED', { signalId: sig.id, orderId: res.order.id, status: res.order.status, limit });
+      }
+      out.push(res);
     }
-    return res;
+    return out;
   }
 
   async submitOrder(p: OrderProposal, opts: SubmitOptions): Promise<SubmitResult> {
@@ -366,6 +415,7 @@ export class TradingEngine {
   async onMarketUpdate(): Promise<void> {
     for (const a of Object.values(this.adapters)) (a as { processQuotes?: () => void } | undefined)?.processQuotes?.();
     await this.oms.syncAllOpen();
+    await this.checkArmedSignals();
     await this.runExitManager();
     await this.checkLossLimits();
   }

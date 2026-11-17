@@ -27,6 +27,8 @@ export interface SubmitOptions {
   firstLiveOrderConfirmation?: string; // typed phrase required once before the first live order
   parentOrderId?: string;
   exitReason?: TradeOrder['exitReason'];
+  /** Set only by the engine when triggering a signal the owner explicitly approved (armed) earlier. */
+  ownerPreApprovedAt?: number;
 }
 
 export interface SubmitResult { order: TradeOrder; decision?: RiskDecision; duplicate: boolean }
@@ -109,11 +111,12 @@ export class OrderManager {
       // (the plan was approved with its stop and target); they must never wait for a click.
       const parent = opts.parentOrderId ? await this.repo.orders.get(opts.parentOrderId) : undefined;
       const preApprovedExit = p.side === 'SELL' && !!parent?.ownerConfirmedAt && (opts.exitReason === 'STOP' || opts.exitReason === 'TARGET');
-      if (!preApprovedExit && (s.executionMode === 'manual_approval' || needsFirst) && !(opts.ownerConfirmed && opts.actor === 'owner')) {
+      const ownerOk = (opts.ownerConfirmed && opts.actor === 'owner') || (opts.ownerPreApprovedAt !== undefined && !needsFirst);
+      if (!preApprovedExit && (s.executionMode === 'manual_approval' || needsFirst) && !ownerOk) {
         order = await this.setStatus(order, 'AWAITING_OWNER');
         return { order, decision, duplicate: false };
       }
-      order = await this.repo.orders.update(order.id, { ownerConfirmedAt: opts.ownerConfirmed && opts.actor === 'owner' ? now : undefined });
+      order = await this.repo.orders.update(order.id, { ownerConfirmedAt: opts.ownerConfirmed && opts.actor === 'owner' ? now : opts.ownerPreApprovedAt });
     }
     order = await this.setStatus(order, 'APPROVED');
     return { order: await this.place(order), decision, duplicate: false };
