@@ -1,0 +1,68 @@
+{
+  "name": "RiskEvents",
+  "type": "object",
+  "title": "RiskEvents",
+  "description": "Append-only risk decisions, blocks and halts. Indexes (enforced by the engine/worker as single writer): environment+ts; severity.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "ts": {
+      "type": "integer"
+    },
+    "code": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARN",
+        "BLOCK",
+        "HALT"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "orderId": {
+      "type": "string"
+    },
+    "signalId": {
+      "type": "string"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "ts",
+    "code",
+    "severity"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "title": "UserProfile",
+  "description": "The single owner profile. Compliance checklist ticks, notification preferences. Indexes (enforced by the engine/worker as single writer): email (unique).",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "timezone": {
+      "type": "string",
+      "default": "Asia/Kolkata"
+    },
+    "notifyEmail": {
+      "type": "boolean",
+      "default": true
+    },
+    "complianceTicks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "sandboxOrderTests": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "createdAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "email"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "name": "DailySnapshots",
+  "type": "object",
+  "title": "DailySnapshots",
+  "description": "End-of-day equity snapshot per environment and IST date. Indexes (enforced by the engine/worker as single writer): environment+date (unique).",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "cashPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "investedCostPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "marketValuePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "unrealizedPnlPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "realizedPnlDayPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "realizedPnlCumPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "feesDayPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "feesCumPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "taxReservePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "tdsReceivablePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "netEquityPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "netContributionsPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "dayReturnPct": {
+      "type": "number"
+    },
+    "cumReturnPct": {
+      "type": "number"
+    },
+    "drawdownPct": {
+      "type": "number"
+    },
+    "peakEquityPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "targetProgressPct": {
+      "type": "number",
+      "description": "Informational progress vs the ASPIRATIONAL daily target. Not a forecast, not a guarantee."
+    },
+    "pricesSource": {
+      "type": "string",
+      "enum": [
+        "LIVE",
+        "BROKER",
+        "PAPER_FEED",
+        "SIMULATED",
+        "HISTORICAL",
+        "ESTIMATE",
+        "MANUAL"
+      ]
+    },
+    "createdAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "date",
+    "netEquityPaise"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

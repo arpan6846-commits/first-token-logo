@@ -1,0 +1,15 @@
+{
+  "name": "dailyReport",
+  "entry": "entry.ts",
+  "automations": [
+    {
+      "type": "scheduled",
+      "name": "daily_report_1815_ist",
+      "description": "Daily report at 18:15 IST (12:45 UTC), after the equity daily close",
+      "is_active": true,
+      "schedule_mode": "recurring",
+      "schedule_type": "cron",
+      "cron_expression": "45 12 * * *"
+    }
+  ]
+}

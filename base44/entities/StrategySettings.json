@@ -1,0 +1,152 @@
+{
+  "name": "StrategySettings",
+  "type": "object",
+  "title": "StrategySettings",
+  "description": "Risk and strategy settings per environment. Changed only by the owner via ownerCommand with typed confirmation. Indexes (enforced by the engine/worker as single writer): environment (unique).",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "initialCapitalPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "allocation": {
+      "type": "object"
+    },
+    "maxRiskPerTradePct": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 1
+    },
+    "dailyLossStopPct": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 2
+    },
+    "weeklyLossStopPct": {
+      "type": "number",
+      "maximum": 5
+    },
+    "maxOpenExposurePct": {
+      "type": "number",
+      "maximum": 100
+    },
+    "dailyRiskBudgetPct": {
+      "type": "number",
+      "maximum": 1
+    },
+    "minRewardRisk": {
+      "type": "number",
+      "minimum": 1
+    },
+    "maxFeeToRiskPct": {
+      "type": "number"
+    },
+    "maxQuoteAgeMs": {
+      "type": "integer"
+    },
+    "maxCandleLagMultiple": {
+      "type": "number"
+    },
+    "maxReconciliationAgeMs": {
+      "type": "integer"
+    },
+    "reinvestPct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "dailyTargetPct": {
+      "type": "number",
+      "description": "ASPIRATIONAL ONLY — never used for sizing or risk"
+    },
+    "maxTradesPerSector": {
+      "type": "integer",
+      "maximum": 3
+    },
+    "maxRangeTradePct": {
+      "type": "number",
+      "maximum": 20
+    },
+    "equityPriceMin": {
+      "type": "number"
+    },
+    "equityPriceMax": {
+      "type": "number"
+    },
+    "minTimeframe": {
+      "type": "string"
+    },
+    "stockTimeframe": {
+      "type": "string"
+    },
+    "cryptoTimeframe": {
+      "type": "string"
+    },
+    "executionMode": {
+      "type": "string",
+      "enum": [
+        "manual_approval",
+        "auto"
+      ]
+    },
+    "liveTradingEnabled": {
+      "type": "boolean"
+    },
+    "firstLiveOrderConfirmedAt": {
+      "type": "integer"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "taxRates": {
+      "type": "object"
+    },
+    "consecutiveLossCooldown": {
+      "type": "integer"
+    },
+    "updatedAt": {
+      "type": "integer"
+    },
+    "updatedBy": {
+      "type": "string"
+    },
+    "confirmedByOwnerAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "version"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

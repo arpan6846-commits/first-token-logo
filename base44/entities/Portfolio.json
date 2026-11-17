@@ -1,0 +1,89 @@
+{
+  "name": "Portfolio",
+  "type": "object",
+  "title": "Portfolio",
+  "description": "Latest equity view per environment (cache written after every snapshot; ledger is the source of truth). Indexes (enforced by the engine/worker as single writer): environment (unique).",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "netEquityPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "cashPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "marketValuePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "unrealizedPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "realizedPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "feesPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "taxReservePaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "reinvestedPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "cashByVenue": {
+      "type": "object"
+    },
+    "exposureByClass": {
+      "type": "object"
+    },
+    "marksComplete": {
+      "type": "boolean"
+    },
+    "markSources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "asOf": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "netEquityPaise",
+    "asOf"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

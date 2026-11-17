@@ -1,0 +1,196 @@
+{
+  "name": "TradeOrders",
+  "type": "object",
+  "title": "TradeOrders",
+  "description": "Orders. idempotencyKey and clientOrderId are unique per environment; brokerOrderId only from venue acknowledgement. Indexes (enforced by the engine/worker as single writer): environment+idempotencyKey (unique); environment+venue+clientOrderId (unique); environment+brokerOrderId; environment+status.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "venue": {
+      "type": "string",
+      "enum": [
+        "KITE",
+        "COINDCX",
+        "PAPER"
+      ]
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "assetClass": {
+      "type": "string",
+      "enum": [
+        "EQUITY",
+        "CRYPTO"
+      ]
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "orderType": {
+      "type": "string",
+      "enum": [
+        "LIMIT",
+        "MARKET",
+        "SL",
+        "SL-M"
+      ]
+    },
+    "product": {
+      "type": "string",
+      "enum": [
+        "CNC",
+        "SPOT"
+      ]
+    },
+    "qty": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "limitPrice": {
+      "type": "number"
+    },
+    "triggerPrice": {
+      "type": "number"
+    },
+    "stopPrice": {
+      "type": "number"
+    },
+    "targetPrice": {
+      "type": "number"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "clientOrderId": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "brokerOrderId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PROPOSED",
+        "RISK_REJECTED",
+        "APPROVED",
+        "AWAITING_OWNER",
+        "SUBMITTING",
+        "OPEN",
+        "PARTIALLY_FILLED",
+        "FILLED",
+        "CANCELLED",
+        "REJECTED",
+        "EXPIRED",
+        "UNKNOWN"
+      ]
+    },
+    "filledQty": {
+      "type": "number",
+      "minimum": 0
+    },
+    "avgFillPrice": {
+      "type": "number"
+    },
+    "feesPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "signalId": {
+      "type": "string"
+    },
+    "rejectionReason": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "createdAt": {
+      "type": "integer"
+    },
+    "updatedAt": {
+      "type": "integer"
+    },
+    "submittedAt": {
+      "type": "integer"
+    },
+    "ownerConfirmedAt": {
+      "type": "integer"
+    },
+    "createdBy": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "system",
+        "ai",
+        "worker",
+        "broker"
+      ]
+    },
+    "isRangeTrade": {
+      "type": "boolean"
+    },
+    "sector": {
+      "type": "string"
+    },
+    "plannedRiskPaise": {
+      "type": "integer",
+      "description": "Integer paise (1 INR = 100 paise)"
+    },
+    "parentOrderId": {
+      "type": "string"
+    },
+    "exitReason": {
+      "type": "string",
+      "enum": [
+        "STOP",
+        "TARGET",
+        "INVALIDATION",
+        "MANUAL",
+        "KILL_SWITCH"
+      ]
+    },
+    "timeframe": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "uid",
+    "environment",
+    "venue",
+    "symbol",
+    "side",
+    "qty",
+    "idempotencyKey",
+    "clientOrderId",
+    "status",
+    "createdAt"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

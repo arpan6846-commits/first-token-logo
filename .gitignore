@@ -1,0 +1,12 @@
+node_modules/
+dist/
+frontend/dist/
+base44/functions-dist/
+.env
+.env.*
+!.env.example
+*.log
+
+# local backup artifacts
+*.bundle
+*-source.zip

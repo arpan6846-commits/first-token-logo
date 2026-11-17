@@ -1,0 +1,15 @@
+{
+  "name": "watchdog",
+  "entry": "entry.ts",
+  "automations": [
+    {
+      "type": "scheduled",
+      "name": "worker_and_feed_watchdog",
+      "description": "Every 5 minutes: worker heartbeat, expired sessions, failed jobs → alerts",
+      "is_active": true,
+      "schedule_mode": "recurring",
+      "schedule_type": "cron",
+      "cron_expression": "*/5 * * * *"
+    }
+  ]
+}

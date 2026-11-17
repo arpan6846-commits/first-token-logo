@@ -1,0 +1,4 @@
+{
+  "name": "workerGateway",
+  "entry": "entry.ts"
+}

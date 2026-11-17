@@ -1,0 +1,75 @@
+{
+  "name": "Commands",
+  "type": "object",
+  "title": "Commands",
+  "description": "Owner intents (signed by ownerCommand) executed by the worker, the single writer. Indexes (enforced by the engine/worker as single writer): status+requestedAt.",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "description": "Engine id (unique). Base44 assigns its own record id separately.",
+      "minLength": 3,
+      "maxLength": 80
+    },
+    "type": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "paper",
+        "production"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "requestedBy": {
+      "type": "string"
+    },
+    "requestedAt": {
+      "type": "integer"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "rls": {
+        "read": false,
+        "write": false
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "DONE",
+        "FAILED"
+      ]
+    },
+    "result": {
+      "type": "object"
+    },
+    "finishedAt": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "uid",
+    "type",
+    "environment",
+    "requestedAt",
+    "status"
+  ],
+  "additionalProperties": false,
+  "rls": {
+    "create": false,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}
