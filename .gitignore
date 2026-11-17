@@ -6,3 +6,7 @@ base44/functions-dist/
 .env.*
 !.env.example
 *.log
+
+# local backup artifacts
+*.bundle
+*-source.zip
