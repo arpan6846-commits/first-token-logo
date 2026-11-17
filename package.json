@@ -1,0 +1,19 @@
+{
+  "name": "wealth-engine-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Personal single-owner AI-assisted wealth management and trading engine (INR, NSE/BSE + crypto spot).",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-transform-types --no-warnings --test tests/*.test.ts",
+    "build:functions": "node scripts/build-functions.mjs",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "0.25.12",
+    "typescript": "5.7.3"
+  }
+}
