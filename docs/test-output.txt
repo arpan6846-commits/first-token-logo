@@ -1,0 +1,152 @@
+▶ 1. INR 10,000 initial capital
+  ✔ appears correctly with the 5,000 / 2,000 / 3,000 allocation (simulation book) (6.770497ms)
+  ✔ production book is NOT pre-funded: real balances only come from owner deposits confirmed by reconciliation (0.398019ms)
+✔ 1. INR 10,000 initial capital (8.087893ms)
+▶ 2. Simulated trades never alter real cash balances
+  ✔ simulation fills do not touch the production book even on a shared database (18.688018ms)
+  ✔ the production ledger refuses SIMULATED / PAPER_FEED data (0.968454ms)
+  ✔ production cannot be wired to a paper/simulation adapter (4.159012ms)
+✔ 2. Simulated trades never alter real cash balances (24.130633ms)
+▶ 3. Real orders require actual broker confirmation
+  ✔ order is OPEN/FILLED only after the venue returns an order id; manual mode waits for the owner (5.38381ms)
+  ✔ first live order needs the typed confirmation phrase (2.200416ms)
+  ✔ a timeout is UNKNOWN and is resolved by client order id — never re-sent (2.935622ms)
+  ✔ a timeout before the venue accepted stays UNKNOWN (no blind retry) (2.531222ms)
+✔ 3. Real orders require actual broker confirmation (14.785646ms)
+▶ 4. Partial fills and rejected orders
+  ✔ partial fill then cancel: holdings and cash reflect only the filled quantity (3.184708ms)
+  ✔ partial fill that completes later becomes FILLED with a weighted average price (3.241733ms)
+  ✔ venue rejection leaves no fill and no cash change (6.969499ms)
+✔ 4. Partial fills and rejected orders (13.597816ms)
+▶ 5. Duplicate orders cannot be created by retrying
+  ✔ same idempotency key returns the original order; venue called once (7.292065ms)
+  ✔ concurrent retries still produce one order (3.135537ms)
+  ✔ replayed venue trades are recorded once (one fill, one ledger entry) (1.886416ms)
+✔ 5. Duplicate orders cannot be created by retrying (12.539444ms)
+▶ 6. Profits are recorded only from verified executions
+  ✔ unreconciled production fills are excluded from eligible profit until reconciliation (7.308753ms)
+  ✔ unrealized gains never count (2.295662ms)
+  ✔ equity sells are not eligible before T+1 settlement (2.323329ms)
+✔ 6. Profits are recorded only from verified executions (12.084001ms)
+▶ 7. Fees and losses reduce actual equity
+  ✔ equity after a losing round trip = capital − price loss − all fees (4.032875ms)
+✔ 7. Fees and losses reduce actual equity (4.105999ms)
+▶ 8. Compounding works from eligible actual profits
+  ✔ reinvests the configured share of new net profit; net equity unchanged by compounding (4.058151ms)
+  ✔ losses below the high-water mark prevent compounding (15.297012ms)
+✔ 8. Compounding works from eligible actual profits (19.46479ms)
+▶ 9. Risk limits block unsafe orders
+  ✔ blocks: risk per trade > 0.5% (1.347882ms)
+  ✔ blocks: missing stop (10.109065ms)
+  ✔ blocks: exposure > 50% / allocation (0.952178ms)
+  ✔ blocks: leverage (0.842608ms)
+  ✔ blocks: short selling (5.067348ms)
+  ✔ blocks: timeframe below 5m (0.89083ms)
+  ✔ blocks: price outside prop-desk universe (0.893757ms)
+  ✔ blocks new entries after the daily loss stop (and latches a halt) (6.684186ms)
+  ✔ blocks production orders when session expired, balances unreconciled, or venue down (1.271473ms)
+  ✔ blocks production orders before Phase 5 and when live trading is disabled (1.219449ms)
+  ✔ with DEFAULT settings, small trades whose costs dominate the risk are rejected (cost finding) (5.012571ms)
+  ✔ the AI actor cannot submit orders (0.773208ms)
+✔ 9. Risk limits block unsafe orders (35.504224ms)
+▶ 10. Emergency stop prevents new orders
+  ✔ kill switch blocks entries and cancels open orders; only the owner can release it (6.291442ms)
+  ✔ protective stop exits of existing positions are still allowed while the kill switch is on (10.634922ms)
+✔ 10. Emergency stop prevents new orders (17.043768ms)
+▶ 11. Missing market data prevents execution
+  ✔ no quote → rejected (0.939429ms)
+  ✔ stale quote → rejected (2.796064ms)
+  ✔ signal engine rejects stale / incomplete candles (1.555449ms)
+✔ 11. Missing market data prevents execution (5.417892ms)
+▶ 12. The 10% daily target is never represented as guaranteed
+  ✔ risk decisions do not depend on the target (1.305217ms)
+  ✔ no screen, doc or report contains guarantee language about returns (8.421251ms)
+  ✔ every UI use of the daily target goes through the TargetProgress component with the disclaimer (2.753558ms)
+✔ 12. The 10% daily target is never represented as guaranteed (12.652828ms)
+▶ Kite adapter
+  ✔ places CNC limit orders with tag, auth header and form encoding (29.988201ms)
+  ✔ refuses MIS/leveraged products and non-integer equity qty locally (0.827615ms)
+  ✔ 5xx / timeout on placement ⇒ outcome unknown (never treated as rejected) (1.315641ms)
+  ✔ finds orders by tag and maps partial fills (1.22584ms)
+  ✔ session and postback checksums (1.27824ms)
+  ✔ parses ticker binary packets (0.843594ms)
+✔ Kite adapter (36.904782ms)
+▶ CoinDCX adapter
+  ✔ signs the exact JSON body with HMAC-SHA256 and sends spot limit orders with client_order_id (3.516515ms)
+  ✔ refuses non-INR and non-spot orders locally (0.41205ms)
+  ✔ maps trade history including fees (1.220868ms)
+  ✔ auth failure is classified as AUTH (0.923586ms)
+✔ CoinDCX adapter (6.393703ms)
+▶ signed internal webhooks
+  ✔ accepts valid, rejects tampered, stale and replayed requests (3.211333ms)
+✔ signed internal webhooks (3.801783ms)
+  synthetic HCLTECH: 428 evaluations, 0 validated
+  synthetic SOLINR backtest: 0 trades, win 0%, net ₹0, maxDD 0%
+▶ hash
+  ✔ sha256 and hmac match node:crypto (5.426882ms)
+✔ hash (6.25083ms)
+▶ ledger
+  ✔ rejects unbalanced, zero and fractional lines (1.218624ms)
+  ✔ is idempotent and append-only (1.178914ms)
+  ✔ hash chain detects tampering (9.617552ms)
+✔ ledger (12.317194ms)
+▶ settings governance
+  ✔ AI / system / worker cannot change settings (0.397723ms)
+  ✔ risk changes need the typed confirmation (0.462906ms)
+  ✔ loosening is deferred to the next trading day; hard ceilings cannot be exceeded (0.590039ms)
+✔ settings governance (1.704257ms)
+▶ market hours & settlement
+  ✔ NSE open/closed and T+1 (2.329455ms)
+✔ market hours & settlement (2.501552ms)
+▶ fees
+  ✔ equity delivery: STT both sides, stamp on buy, DP on sell; crypto: TDS only on sell (0.463249ms)
+✔ fees (0.659134ms)
+▶ prop desk math
+  ✔ R:R with reverse check (long and short) (3.643293ms)
+  ✔ qty with reverse check (0.178642ms)
+  ✔ daily risk tiers never exceed 1% and default to lowest tier without sample (0.14794ms)
+  ✔ pyramid adds shrink; P/E spread rule is the course rule (0.766343ms)
+  ✔ stock scoring rejects against-sector and range-bound names (0.119782ms)
+  ✔ Final Check has 100 items; manual items pending block a pass until ticked (0.656656ms)
+  ✔ sizing respects risk incl. costs and the notional cap (0.336783ms)
+✔ prop desk math (6.066137ms)
+▶ price action
+  ✔ retracement classes follow the rulebook bands (0.114438ms)
+  ✔ detects a 4-touch range (9.847837ms)
+  ✔ territory: sustained break of a reacted high → BUYERS; initiator break flips to SELLERS (0.897316ms)
+✔ price action (11.061665ms)
+▶ signal pipeline on synthetic data
+  ✔ every VALIDATED signal respects stop < entry < target, risk caps and net R:R; manual Final Check items stay pending (1291.055663ms)
+  ✔ backtest runs without look-ahead and reports caveats (495.243934ms)
+✔ signal pipeline on synthetic data (1786.490883ms)
+▶ AI review can only make signals more conservative
+  ✔ rejects malformed output and never upgrades (0.475732ms)
+✔ AI review can only make signals more conservative (0.580898ms)
+  e2e: entry 124.7 x19, exit 140.3, realized ₹296.4, fees ₹21.5, tax reserve ₹86.65, reinvested ₹94.12
+▶ end-to-end on a scripted rulebook setup (simulation)
+  ✔ validates, waits for confirmation, fills, exits at the price-action target and compounds verified profit (75.846161ms)
+  ✔ an armed signal expires when the setup is invalidated (close below stop) and never trades (12.193443ms)
+  ✔ production signals cannot be armed without the Final Check (manual items + written journal) (19.82731ms)
+✔ end-to-end on a scripted rulebook setup (simulation) (109.020209ms)
+▶ Base44Repo mapping
+  ✔ maps id⇄uid, paginates, enforces unique keys and append-only rules (270.484812ms)
+  ✔ the full engine runs on Base44Repo (orders, fills, ledger chain, audit chain) (20.536432ms)
+✔ Base44Repo mapping (291.944214ms)
+▶ worker ⇄ gateway protocol
+  ✔ signed requests work; unsigned/tampered requests are refused (134.592359ms)
+✔ worker ⇄ gateway protocol (134.840887ms)
+▶ owner commands executed by the worker
+  ✔ verifies signatures and refuses tampered or stale commands (2.467527ms)
+  ✔ kill switch command blocks orders; journal and settings commands go through owner rules (2.633011ms)
+✔ owner commands executed by the worker (5.294433ms)
+▶ entity schemas match engine records (no drift)
+  ✔ every field written by the engine exists in the Base44 entity schema (10.799718ms)
+✔ entity schemas match engine records (no drift) (11.035305ms)
+ℹ tests 83
+ℹ suites 29
+ℹ pass 83
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2300.0927
