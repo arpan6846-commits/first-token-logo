@@ -166,7 +166,7 @@ def pre_trade_check(a: dict, cfg: dict, trades: list[dict], ledger: list[dict], 
 
     day_trades = [t for t in trades if t["opened_at"][:10] == d and t["mode"] == mode]
     open_trades = [t for t in trades if t["status"] == "OPEN" and t["mode"] == mode]
-    day_loss = -min(0.0, realised_pnl(trades, mode, d))
+    day_loss = max(0.0, -realised_pnl(trades, mode, d))
     open_risk_today = sum(t["risk_rs"] for t in day_trades)
 
     add("kill switch OFF", not state.get("kill_switch"), state.get("kill_reason", ""))
@@ -340,7 +340,7 @@ def cmd_trade_close(ns) -> int:
 
     # automatic kill-switch triggers
     cap = capital(cfg, trades, load_ledger())
-    day_loss = -min(0.0, realised_pnl(trades, cfg["mode"], d.strftime("%Y-%m-%d")))
+    day_loss = max(0.0, -realised_pnl(trades, cfg["mode"], d.strftime("%Y-%m-%d")))
     reasons = []
     if day_loss >= cap * cfg["max_daily_loss_pct"] / 100:
         reasons.append(f"daily loss ₹{day_loss:,.2f} ≥ {cfg['max_daily_loss_pct']}%")
@@ -399,8 +399,24 @@ def cmd_status(ns) -> int:
     return 0
 
 
+def stats_by(trades: list[dict], mode: str, key: str) -> dict:
+    """Learning view: kaunsa setup / sector / direction kaam kar raha hai (closed trades, lifetime)."""
+    groups: dict[str, list[dict]] = {}
+    for t in trades:
+        if t["status"] == "CLOSED" and t["mode"] == mode:
+            groups.setdefault(str(t.get(key) or "-"), []).append(t)
+    out = {}
+    for g, ts in sorted(groups.items()):
+        s = stats(ts, mode)
+        out[g] = {k: s[k] for k in ("trades", "win_rate_pct", "avg_r", "net_pnl", "profit_factor")}
+    return out
+
+
 def cmd_stats(ns) -> int:
     cfg = load_config()
+    if ns.by:
+        print(json.dumps(stats_by(load_trades(), cfg["mode"], ns.by), ensure_ascii=False, indent=2))
+        return 0
     s = stats(load_trades(), cfg["mode"], None if ns.all else (ns.date or today()))
     print(json.dumps(s, ensure_ascii=False, indent=2))
     return 0
@@ -527,7 +543,8 @@ def main(argv=None) -> int:
     l.add_argument("amount", nargs="?", default="0"); l.add_argument("--note"); l.set_defaults(fn=cmd_ledger)
 
     sub.add_parser("status").set_defaults(fn=cmd_status)
-    s = sub.add_parser("stats"); s.add_argument("--date"); s.add_argument("--all", action="store_true"); s.set_defaults(fn=cmd_stats)
+    s = sub.add_parser("stats"); s.add_argument("--date"); s.add_argument("--all", action="store_true")
+    s.add_argument("--by", choices=["setup", "sector", "side", "symbol"]); s.set_defaults(fn=cmd_stats)
     r = sub.add_parser("review"); r.add_argument("--date"); r.add_argument("--force", action="store_true"); r.set_defaults(fn=cmd_review)
     le = sub.add_parser("lesson"); le.add_argument("op", choices=["add"]); le.add_argument("text")
     le.add_argument("--proposed", action="store_true"); le.set_defaults(fn=cmd_lesson)

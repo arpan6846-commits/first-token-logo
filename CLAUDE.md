@@ -33,6 +33,20 @@ Config: `desk/config.json` (MODE / APPROVAL / limits). Journal: `desk/journal/`.
    (rulebook ref ke saath), missed trades, psychology. Day P&L, win rate, avg R, max DD (`desk.py stats`).
    Lessons → `desk.py lesson add "..."`; naya rule sirf `--proposed` (user approve karega). Core rules khud kabhi mat badlo.
 
+## SCHEDULED ROUTINES (weekdays, IST — scheduled tasks inhe trigger karte hain)
+Har run ki shuruaat: `git fetch origin claude/prop-trading-desk-agent-92o7qo && git checkout claude/prop-trading-desk-agent-92o7qo && git pull`,
+phir STARTUP steps 1–4. NSE holiday / Kite session invalid → ek line report, kuch aur nahi.
+Har run ke end: journal changes commit + push usi branch par (container ephemeral hai, warna history kho jaayegi).
+- **PRE 08:45** → `plans/YYYY-MM-DD.md` banao/refresh karo (EOD draft ho to use update): GIFT Nifty, US data result, FII/DII,
+  sector table, watchlist 3–5 with trigger/SL/target/R:R, Final Check. Report "PRE-MARKET PLAN" (short).
+- **LIVE 09:35–14:35 (hourly)** → watchlist stocks ka 15m + 1h (Kite historical) → `desk/pa.py` se retracement %, range touches,
+  sustained closes. Trigger EXACT ho to TRADE CARD + `desk.py check` → PASS par PAPER `trade open`. Open trades: SL/target hit
+  hua ho to `trade close` (actual 15m high/low se). Kuch nahi bana to ek line "no trigger".
+- **SQUARE-OFF 15:10** → saare OPEN MIS trades LTP par `trade close --reason "15:15 square-off"`.
+- **POST 15:50** → `desk.py review` bharo (SAHI kyu / GALAT kyu with rulebook refs), `stats`, `stats --by setup`, lessons,
+  PROPOSED rules, aur agle din ka EOD watchlist draft. Report "POST-MARKET REVIEW".
+Price-action numbers: Kite candles ko JSON file mein save karke `python3 desk/pa.py <file> [--level L --side up|down]`.
+
 ## RISK RULES (NON-NEGOTIABLE — engine enforce karta hai)
 Per trade 1% · daily loss 2% (hit → kill switch) · rulebook: total daily committed risk ≤ 1% · max 3 open · max 4 trades/day ·
 max 2 per sector · min R:R 1:2 · qty = risk ÷ |entry − SL| · revenge / averaging down / SL hatana-badhana BANNED ·

@@ -78,5 +78,15 @@ class T(unittest.TestCase):
         self.assertEqual(s["max_drawdown"], 500)
 
 
+class TBy(unittest.TestCase):
+    def test_stats_by_setup(self):
+        a, b, c = closed(500, 1), closed(-250, 2), closed(-250, 3)
+        a["setup"], b["setup"], c["setup"] = "V", "V", "probe"
+        out = desk.stats_by([a, b, c], "PAPER", "setup")
+        self.assertEqual(out["V"]["trades"], 2)
+        self.assertEqual(out["V"]["net_pnl"], 250)
+        self.assertEqual(out["probe"]["win_rate_pct"], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
