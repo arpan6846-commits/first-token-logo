@@ -72,19 +72,19 @@ contract RiskController is AccessControl, IRiskController {
         emit TokenAllowlisted(token, allowed);
     }
 
-    function setStrategyLimits(address adapter, uint16 maxAllocationBps_, uint256 maxAbsolute)
+    function setStrategyLimits(address adapter, uint16 maxAllocationBps_, uint256 maxAbsolute_)
         external
         onlyRole(GOVERNANCE_ROLE)
     {
         if (maxAllocationBps_ > HARD_MAX_ALLOCATION_BPS) revert InvalidBps();
         StrategyRisk storage r = _risk[adapter];
         r.maxAllocationBps = maxAllocationBps_;
-        r.maxAbsolute = maxAbsolute;
+        r.maxAbsolute = maxAbsolute_;
         if (!r.configured) {
             r.configured = true;
             r.score = 50; // neutral until the risk engine reports
         }
-        emit StrategyLimitsSet(adapter, maxAllocationBps_, maxAbsolute);
+        emit StrategyLimitsSet(adapter, maxAllocationBps_, maxAbsolute_);
     }
 
     function setMinReserveBps(uint16 bps) external onlyRole(GOVERNANCE_ROLE) {
@@ -113,15 +113,15 @@ contract RiskController is AccessControl, IRiskController {
         emit StrategyBlocked(adapter, false);
     }
 
-    function guardianLowerLimits(address adapter, uint16 maxAllocationBps_, uint256 maxAbsolute)
+    function guardianLowerLimits(address adapter, uint16 maxAllocationBps_, uint256 maxAbsolute_)
         external
         onlyRole(GUARDIAN_ROLE)
     {
         StrategyRisk storage r = _risk[adapter];
-        if (maxAllocationBps_ > r.maxAllocationBps || maxAbsolute > r.maxAbsolute) revert OnlyRiskReduction();
+        if (maxAllocationBps_ > r.maxAllocationBps || maxAbsolute_ > r.maxAbsolute) revert OnlyRiskReduction();
         r.maxAllocationBps = maxAllocationBps_;
-        r.maxAbsolute = maxAbsolute;
-        emit StrategyLimitsSet(adapter, maxAllocationBps_, maxAbsolute);
+        r.maxAbsolute = maxAbsolute_;
+        emit StrategyLimitsSet(adapter, maxAllocationBps_, maxAbsolute_);
     }
 
     function guardianRaiseReserve(uint16 bps) external onlyRole(GUARDIAN_ROLE) {

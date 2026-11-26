@@ -249,10 +249,13 @@ contract AMYEVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     function rebalance() external onlyRole(KEEPER_ROLE) whenNotPaused nonReentrant {
         uint256 ta = totalAssets();
         uint256 n = router.strategyCount();
-        uint256 withdrawn;
-        uint256 deployed;
+        uint256 withdrawn = _pullSurplus(ta, n);
+        uint256 deployed = _deployDeficits(ta, n);
+        emit Rebalanced(msg.sender, deployed, withdrawn, idleAssets());
+    }
 
-        // 1. Pull surplus out of over-allocated (or inactive / blocked) strategies.
+    /// @dev Pull surplus out of over-allocated (or inactive) strategies.
+    function _pullSurplus(uint256 ta, uint256 n) internal returns (uint256 withdrawn) {
         for (uint256 i; i < n; ++i) {
             uint256 book = router.bookValue(i);
             uint256 target = router.isActive(i) ? (ta * router.targetBps(i)) / BPS : 0;
@@ -263,8 +266,10 @@ contract AMYEVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
                 if (amt > 0) withdrawn += router.withdrawFromStrategy(i, amt);
             }
         }
+    }
 
-        // 2. Deploy idle cash above the reserve into under-allocated strategies.
+    /// @dev Deploy idle cash above the liquid reserve into under-allocated strategies.
+    function _deployDeficits(uint256 ta, uint256 n) internal returns (uint256 deployed) {
         uint256 reserveBps = router.reserveTargetBps();
         uint16 minRes = riskController.minReserveBps();
         if (reserveBps < minRes) reserveBps = minRes;
@@ -272,19 +277,20 @@ contract AMYEVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         uint256 idle = idleAssets();
         uint256 deployable = idle > reserveTarget ? idle - reserveTarget : 0;
         for (uint256 i; i < n && deployable > 0; ++i) {
-            if (!router.isActive(i)) continue;
-            address adapter = router.adapterOf(i);
-            if (!riskController.canReceiveDeposits(adapter)) continue;
-            uint256 target = (ta * router.targetBps(i)) / BPS;
-            uint256 book = router.bookValue(i);
-            if (target <= book) continue;
-            uint256 amt = target - book < deployable ? target - book : deployable;
-            IERC20(asset()).forceApprove(address(router), amt);
-            router.deployToStrategy(i, amt, ta);
+            uint256 amt = _deployOne(i, ta, deployable);
             deployable -= amt;
             deployed += amt;
         }
-        emit Rebalanced(msg.sender, deployed, withdrawn, idleAssets());
+    }
+
+    function _deployOne(uint256 i, uint256 ta, uint256 deployable) internal returns (uint256 amt) {
+        if (!router.isActive(i) || !riskController.canReceiveDeposits(router.adapterOf(i))) return 0;
+        uint256 target = (ta * router.targetBps(i)) / BPS;
+        uint256 book = router.bookValue(i);
+        if (target <= book) return 0;
+        amt = target - book < deployable ? target - book : deployable;
+        IERC20(asset()).forceApprove(address(router), amt);
+        router.deployToStrategy(i, amt, ta);
     }
 
     // ================================================================== guardian (instant risk reduction)

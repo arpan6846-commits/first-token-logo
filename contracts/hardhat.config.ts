@@ -22,7 +22,7 @@ const accounts = process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVAT
 const config: HardhatUserConfig = {
   solidity: {
     version: SOLC_VERSION,
-    settings: { optimizer: { enabled: true, runs: 200 }, viaIR: false, evmVersion: "paris" },
+    settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true, evmVersion: "paris" },
   },
   networks: {
     hardhat: {},
