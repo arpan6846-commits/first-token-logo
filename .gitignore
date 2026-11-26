@@ -1,0 +1,3 @@
+# Local agent/plugin state, not project code
+.anchor/
+.claude/
