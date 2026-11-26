@@ -6,3 +6,6 @@ Har entry dated hai. `[PROPOSED]` = naya rule, user approval pending.
 - 2026-11-25 — 25-Nov: 100% retracement ke baad failing side (sellers) ne 25,344 extreme nahi toda → buyers continue. Rule 'after 100% retracement' Nifty 1h par sahi kaam kiya.
 - 2026-11-25 — Nifty strong day par jo sector lower low banaye (Metal, 25-Nov) wo sell-side primary hai; lekin range bottom par short nahi — pullback ka wait.
 - 2026-11-25 — [PROPOSED] Scheduled pre-market/live/post-market runs + git commit har run ke baad, taaki journal ephemeral container mein kho na jaaye.
+- 2026-11-26 — 26-Nov: TATASTEEL short skip sahi — sellers' rejection kabhi nahi aaya, stock +2.66%. CG5 (opposite side still reacting) ne bachaya.
+- 2026-11-26 — 26-Nov: HDFCBANK breakout 850.5→871.6 chase nahi kiya (N8, N16 no PA target); phir 855.6 tak retrace — chase karte to SL hit hota.
+- 2026-11-26 — [PROPOSED] Sector-relative short candidate tabhi primary jab weakness >= 2 consecutive sessions ho.
