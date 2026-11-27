@@ -2,7 +2,7 @@
   {
     "id": "T20261127-1",
     "mode": "PAPER",
-    "status": "OPEN",
+    "status": "CLOSED",
     "symbol": "TCS",
     "side": "LONG",
     "sector": "IT",
@@ -21,7 +21,14 @@
     "sl_order_id": "",
     "opened_at": "2026-11-27T14:37:21+05:30",
     "log": [
-      "14:37:21 OPEN 21 @ 2596.8 SL 2585.5 TGT 2629.9"
-    ]
+      "14:37:21 OPEN 21 @ 2596.8 SL 2585.5 TGT 2629.9",
+      "15:12:20 CLOSE @ 2585.5 (SL hit (14:30 15m low 2584.3)) P&L ₹-237.3"
+    ],
+    "exit": 2585.5,
+    "exit_reason": "SL hit (14:30 15m low 2584.3)",
+    "pnl": -237.3,
+    "r_multiple": -1.0,
+    "closed_at": "2026-11-27T15:12:20+05:30",
+    "rule_followed": true
   }
 ]
