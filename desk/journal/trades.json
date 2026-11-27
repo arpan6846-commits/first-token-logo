@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "id": "T20261127-1",
+    "mode": "PAPER",
+    "status": "OPEN",
+    "symbol": "TCS",
+    "side": "LONG",
+    "sector": "IT",
+    "setup": "V + build-up break (buyers' HTF, pullback day)",
+    "ref": "3.5 / M6, M7, N8",
+    "product": "MIS",
+    "entry": 2596.8,
+    "sl": 2585.5,
+    "target": 2629.9,
+    "qty": 21,
+    "risk_rs": 237.3,
+    "rr_planned": 2.93,
+    "confidence": 5,
+    "invalidation": "15m close < 2584 / SL 2585.5",
+    "order_id": "",
+    "sl_order_id": "",
+    "opened_at": "2026-11-27T14:37:21+05:30",
+    "log": [
+      "14:37:21 OPEN 21 @ 2596.8 SL 2585.5 TGT 2629.9"
+    ]
+  }
+]
